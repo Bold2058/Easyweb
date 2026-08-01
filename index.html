@@ -63,6 +63,24 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
         .animation-delay-2000 { animation-delay: 2s; }
+
+        /* Learn More modal — smooth Apple-style reveal */
+        .lm-backdrop {
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+        .lm-backdrop.lm-open {
+            opacity: 1;
+        }
+        .lm-panel {
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: scale(0.92) translateY(24px);
+        }
+        .lm-backdrop.lm-open .lm-panel {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
@@ -224,7 +242,7 @@
                         <span class="text-xs text-slate-500">3-5 Days</span>
                     </div>
                     <div class="flex gap-2">
-                        <button class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
+                        <button onclick="openLearnMore('business')" class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
                         <button onclick="openForm()" class="flex-1 bg-brand-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-brand-700 transition">Request Quote</button>
                     </div>
                 </div>
@@ -243,7 +261,7 @@
                         <span class="text-xs text-slate-500">7-10 Days</span>
                     </div>
                     <div class="flex gap-2">
-                        <button class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
+                        <button onclick="openLearnMore('ecommerce')" class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
                         <button onclick="openForm()" class="flex-1 bg-brand-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-brand-700 transition">Request Quote</button>
                     </div>
                 </div>
@@ -262,7 +280,7 @@
                         <span class="text-xs text-slate-500">4-6 Days</span>
                     </div>
                     <div class="flex gap-2">
-                        <button class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
+                        <button onclick="openLearnMore('portfolio')" class="flex-1 bg-slate-100 dark:bg-slate-700 py-2 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Learn More</button>
                         <button onclick="openForm()" class="flex-1 bg-brand-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-brand-700 transition">Request Quote</button>
                     </div>
                 </div>
@@ -610,6 +628,38 @@
     </div>
 
     <!-- Multi-step Form Modal -->
+    <!-- Learn More Modal (Package Details) -->
+    <div id="learn-more-modal" class="lm-backdrop fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this) closeLearnMore()">
+        <div class="lm-panel glass w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto relative border border-white/20">
+            <button onclick="closeLearnMore()" class="absolute top-4 right-4 w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-600 transition z-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="p-6 md:p-10">
+                <div id="lm-icon" class="w-16 h-16 bg-gradient-to-br from-brand-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white mb-6"></div>
+                <h2 id="lm-title" class="text-2xl md:text-3xl font-bold mb-2"></h2>
+                <p id="lm-desc" class="text-slate-600 dark:text-slate-300 mb-6"></p>
+                <div class="flex flex-wrap gap-4 mb-8">
+                    <div class="glass px-5 py-3 rounded-2xl border border-white/20">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Starting Price</div>
+                        <div id="lm-price" class="font-bold text-brand-600 text-lg"></div>
+                    </div>
+                    <div class="glass px-5 py-3 rounded-2xl border border-white/20">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Delivery Time</div>
+                        <div id="lm-duration" class="font-bold text-lg"></div>
+                    </div>
+                </div>
+                <h3 class="font-semibold mb-4 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">What's Included</h3>
+                <ul id="lm-features" class="grid sm:grid-cols-2 gap-3 mb-8 text-sm text-slate-600 dark:text-slate-300"></ul>
+                <h3 class="font-semibold mb-3 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Ideal For</h3>
+                <div id="lm-ideal" class="flex flex-wrap gap-2 mb-8"></div>
+                <div class="flex gap-3">
+                    <button onclick="closeLearnMore()" class="flex-1 bg-slate-100 dark:bg-slate-700 py-3 rounded-xl text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition">Close</button>
+                    <button onclick="switchToQuote()" class="flex-1 bg-brand-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-brand-700 transition">Request Quote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="quote-modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="glass w-full max-w-3xl rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto relative border border-white/20">
             <button onclick="closeForm()" class="absolute top-4 right-4 w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-600 transition z-10">
@@ -825,6 +875,103 @@
         const totalSteps = 5;
         const form = document.getElementById('multi-step-form');
         const modal = document.getElementById('quote-modal');
+
+        // Learn More — package details data
+        const packageData = {
+            business: {
+                title: 'Business Website',
+                price: 'From ₹4,999',
+                duration: '3-5 Days',
+                icon: '<svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>',
+                description: "A clean, professional website that puts your business online fast. Built for shops, clinics, consultants and local service providers who want customers to find them, trust them, and get in touch easily.",
+                features: [
+                    'Up to 5 pages (Home, About, Services, Gallery, Contact)',
+                    'Contact form with Google Maps location',
+                    'Fully responsive on mobile, tablet & desktop',
+                    'WhatsApp click-to-chat button',
+                    'Basic SEO setup to help you rank on Google',
+                    'Free SSL security certificate',
+                    'Social media links integration',
+                    '1 free round of revisions'
+                ],
+                ideal: ['Local Shops', 'Clinics & Doctors', 'Consultants', 'Salons & Spas', 'Service Businesses']
+            },
+            ecommerce: {
+                title: 'E-commerce Store',
+                price: 'From ₹14,999',
+                duration: '7-10 Days',
+                icon: '<svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+                description: "A complete online store to sell your products directly to customers, with secure payments, inventory tracking, and an easy admin panel, built to grow with your business.",
+                features: [
+                    'Unlimited product catalog with categories',
+                    'Secure payment gateway (UPI, Cards, Netbanking)',
+                    'Inventory & stock management',
+                    'Order tracking & customer accounts',
+                    'Easy-to-use admin dashboard',
+                    'Coupon codes & discount system',
+                    'Shipping & delivery integration',
+                    'WhatsApp order notifications'
+                ],
+                ideal: ['Retail Brands', 'Boutiques', 'D2C Sellers', 'Wholesalers']
+            },
+            portfolio: {
+                title: 'Portfolio Website',
+                price: 'From ₹6,999',
+                duration: '4-6 Days',
+                icon: '<svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
+                description: "An elegant, visually-driven website to showcase your work. Built for photographers, designers and creatives who need their portfolio to make a strong first impression.",
+                features: [
+                    'Custom photo/video gallery with lightbox',
+                    'Smooth scroll & custom animations',
+                    'Client testimonials section',
+                    'Project & case-study pages',
+                    'Optional blog section',
+                    'Social media integration',
+                    'Contact & booking form',
+                    '1 free round of revisions'
+                ],
+                ideal: ['Photographers', 'Designers', 'Artists', 'Agencies', 'Freelancers']
+            }
+        };
+
+        const learnMoreModal = document.getElementById('learn-more-modal');
+        const lmCheckIcon = '<svg class="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>';
+
+        function openLearnMore(key) {
+            const data = packageData[key];
+            if (!data) return;
+            document.getElementById('lm-icon').innerHTML = data.icon;
+            document.getElementById('lm-title').innerText = data.title;
+            document.getElementById('lm-desc').innerText = data.description;
+            document.getElementById('lm-price').innerText = data.price;
+            document.getElementById('lm-duration').innerText = data.duration;
+            document.getElementById('lm-features').innerHTML = data.features.map(f => `<li class="flex items-start gap-2">${lmCheckIcon}<span>${f}</span></li>`).join('');
+            document.getElementById('lm-ideal').innerHTML = data.ideal.map(t => `<span class="px-3 py-1.5 bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 rounded-full text-xs font-semibold">${t}</span>`).join('');
+
+            learnMoreModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                learnMoreModal.classList.add('lm-open');
+            }));
+        }
+
+        function closeLearnMore() {
+            learnMoreModal.classList.remove('lm-open');
+            document.body.style.overflow = '';
+            setTimeout(() => learnMoreModal.classList.add('hidden'), 400);
+        }
+
+        function switchToQuote() {
+            learnMoreModal.classList.remove('lm-open');
+            learnMoreModal.classList.add('hidden');
+            openForm();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !learnMoreModal.classList.contains('hidden')) {
+                closeLearnMore();
+            }
+        });
         
         function openForm() {
             modal.classList.remove('hidden');
