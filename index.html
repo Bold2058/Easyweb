@@ -243,19 +243,108 @@ async function logoutUser() {
 
 
 async function loginWithGoogle() {
+    showAuthMessage("Opening Google login...");
 
-    const { error } = await supabaseClient.auth.signInWithOAuth({
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
         provider: "google",
         options: {
-            redirectTo: window.location.origin + window.location.pathname
+            redirectTo: window.location.origin + window.location.pathname,
+            skipBrowserRedirect: true
         }
     });
 
     if (error) {
+        console.error("Google login error:", error);
         showAuthMessage(error.message);
+        return;
     }
-    // On success, Supabase redirects to Google, then back to this page,
-    // where checkLogin()/onAuthStateChange() picks up the new session.
+
+    if (!data?.url) {
+        showAuthMessage("Unable to open Google login.");
+        return;
+    }
+
+    // Open Google authentication in a popup
+    const width = 500;
+    const height = 650;
+
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const googlePopup = window.open(
+        data.url,
+        "GoogleLogin",
+        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+
+    if (!googlePopup) {
+        showAuthMessage("Popup blocked. Please allow popups for this website.");
+        return;
+    }
+
+    showAuthMessage("Please complete Google login in the popup...");
+
+    // Check when Supabase receives the Google session
+    const checkPopupLogin = setInterval(async () => {
+
+        // Popup was closed
+        if (googlePopup.closed) {
+            clearInterval(checkPopupLogin);
+
+            const {
+                data: { user }
+            } = await supabaseClient.auth.getUser();
+
+            if (user) {
+                updateAuthUI(user);
+                showAuthMessage("Google login successful!");
+
+                const authModal = document.getElementById("authModal");
+                if (authModal && !authModal.classList.contains("hidden")) {
+                    setTimeout(closeAuthModal, 500);
+                }
+            } else {
+                showAuthMessage("");
+            }
+
+            return;
+        }
+
+        // Check for a successful Supabase session
+        const {
+            data: { session }
+        } = await supabaseClient.auth.getSession();
+
+        if (session?.user) {
+            clearInterval(checkPopupLogin);
+
+            updateAuthUI(session.user);
+
+            showAuthMessage("Google login successful!");
+
+            try {
+                googlePopup.close();
+            } catch (e) {
+                console.log("Popup close:", e);
+            }
+
+            const authModal = document.getElementById("authModal");
+
+            if (authModal && !authModal.classList.contains("hidden")) {
+                setTimeout(closeAuthModal, 500);
+            }
+        }
+
+    }, 500);
+
+    // Safety timeout after 5 minutes
+    setTimeout(() => {
+        clearInterval(checkPopupLogin);
+
+        if (!googlePopup.closed) {
+            googlePopup.close();
+        }
+    }, 5 * 60 * 1000);
 }
 
 
