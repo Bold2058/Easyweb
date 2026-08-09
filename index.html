@@ -97,10 +97,20 @@
                 <a href="#about" class="hover:text-brand-600 transition">About</a>
                 <a href="#services" class="hover:text-brand-600 transition">Services</a>
                 <a href="#pricing" class="hover:text-brand-600 transition">Pricing</a>
-                <a href="#portfolio" class="hover:text-brand-600 transition">Portfolio</a>
                 <a href="#faq" class="hover:text-brand-600 transition">FAQ</a>
                 <a href="#contact" class="hover:text-brand-600 transition">Contact</a>
-                <button onclick="openForm()" class="bg-brand-600 text-white px-5 py-2 rounded-full font-medium hover:bg-brand-700 transition shadow-lg shadow-brand-500/30">Get Quote</button>
+
+<button
+    onclick="openAuthModal()"
+    class="border border-brand-600 text-brand-600 px-5 py-2 rounded-full font-medium hover:bg-brand-600 hover:text-white transition">
+    Login
+</button>
+
+<button
+    onclick="openForm()"
+    class="bg-brand-600 text-white px-5 py-2 rounded-full font-medium hover:bg-brand-700 transition shadow-lg shadow-brand-500/30">
+    Get Quote
+</button>
             </div>
             <div class="flex items-center gap-4">
                 <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition">
@@ -1290,5 +1300,57 @@ supabaseClient.auth.onAuthStateChange(
 checkLogin();
 
 </script>
+    <!-- AUTH MODAL -->
+<div id="authModal"
+     class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4">
+
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-md shadow-2xl relative">
+
+        <button
+            onclick="closeAuthModal()"
+            class="absolute top-4 right-5 text-2xl text-slate-500">
+            ×
+        </button>
+
+        <h2 id="authTitle"
+            class="text-2xl font-bold mb-2">
+            Login to EasyWeb
+        </h2>
+
+        <p class="text-slate-500 mb-6">
+            Login to manage your EasyWeb account.
+        </p>
+
+        <input
+            id="authEmail"
+            type="email"
+            placeholder="Email Address"
+            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+
+        <input
+            id="authPassword"
+            type="password"
+            placeholder="Password"
+            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+
+        <button
+            id="authMainButton"
+            onclick="loginUser()"
+            class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold">
+            Login
+        </button>
+
+        <p id="authMessage"
+           class="text-sm text-center mt-4"></p>
+
+        <button
+            onclick="toggleAuthMode()"
+            id="authToggle"
+            class="w-full mt-4 text-brand-600">
+            Don't have an account? Sign Up
+        </button>
+
+    </div>
+</div>
 </body>
 </html>
