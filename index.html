@@ -101,6 +101,7 @@
                 <a href="#contact" class="hover:text-brand-600 transition">Contact</a>
 
 <button
+    id="navAuthBtn"
     onclick="openAuthModal()"
     class="border border-brand-600 text-brand-600 px-5 py-2 rounded-full font-medium hover:bg-brand-600 hover:text-white transition">
     Login
@@ -140,45 +141,12 @@ const supabaseClient = window.supabase.createClient(
     }
 );
 </script>
-    <div id="authBox">
-
-    <h2>EasyWeb Account</h2>
-
-    <input
-        type="email"
-        id="authEmail"
-        placeholder="Email Address"
-        autocomplete="email"
-    >
-
-    <input
-        type="password"
-        id="authPassword"
-        placeholder="Password"
-        autocomplete="current-password"
-    >
-
-    <button onclick="signupUser()">
-        Create Account
-    </button>
-
-    <button onclick="loginUser()">
-        Login
-    </button>
-
-    <button onclick="logoutUser()" id="logoutButton" style="display:none;">
-        Logout
-    </button>
-
-    <p id="authMessage"></p>
-
-</div>
     <script>
 
 async function signupUser() {
 
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
 
     if (!email || !password) {
         showAuthMessage("Please enter email and password.");
@@ -216,8 +184,8 @@ async function signupUser() {
 
 async function loginUser() {
 
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
 
     if (!email || !password) {
         showAuthMessage("Please enter email and password.");
@@ -264,12 +232,14 @@ function showAuthMessage(message) {
 
 function updateAuthUI(user) {
 
-    const logoutButton =
-        document.getElementById("logoutButton");
+    const navBtn = document.getElementById("navAuthBtn");
 
     if (user) {
 
-        logoutButton.style.display = "block";
+        if (navBtn) {
+            navBtn.innerText = "Logout";
+            navBtn.onclick = logoutUser;
+        }
 
         showAuthMessage(
             "Logged in as: " + user.email
@@ -277,7 +247,10 @@ function updateAuthUI(user) {
 
     } else {
 
-        logoutButton.style.display = "none";
+        if (navBtn) {
+            navBtn.innerText = "Login";
+            navBtn.onclick = openAuthModal;
+        }
 
     }
 }
@@ -302,16 +275,76 @@ supabaseClient.auth.onAuthStateChange(
 
         updateAuthUI(session?.user ?? null);
 
+        // Auto-close the auth modal on a successful login/signup
+        if (session?.user) {
+            const authModalEl = document.getElementById("authModal");
+            if (authModalEl && !authModalEl.classList.contains("hidden")) {
+                setTimeout(closeAuthModal, 600);
+            }
+        }
     }
 );
 
 
 checkLogin();
 
+/* Auth modal open/close + tab switching */
+
+function openAuthModal() {
+    switchAuthTab('login');
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("signupEmail").value = "";
+    document.getElementById("signupPassword").value = "";
+    showAuthMessage("");
+    document.getElementById("authModal").classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+}
+
+function closeAuthModal() {
+    document.getElementById("authModal").classList.add("hidden");
+    document.body.style.overflow = "";
+}
+
+function switchAuthTab(tab) {
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
+    const loginTabBtn = document.getElementById("authTabLoginBtn");
+    const signupTabBtn = document.getElementById("authTabSignupBtn");
+
+    const activeClasses = ["bg-brand-600", "text-white"];
+    const inactiveClasses = ["text-slate-600", "dark:text-slate-300"];
+
+    if (tab === "signup") {
+        loginForm.classList.add("hidden");
+        signupForm.classList.remove("hidden");
+        signupTabBtn.classList.add(...activeClasses);
+        signupTabBtn.classList.remove(...inactiveClasses);
+        loginTabBtn.classList.remove(...activeClasses);
+        loginTabBtn.classList.add(...inactiveClasses);
+    } else {
+        signupForm.classList.add("hidden");
+        loginForm.classList.remove("hidden");
+        loginTabBtn.classList.add(...activeClasses);
+        loginTabBtn.classList.remove(...inactiveClasses);
+        signupTabBtn.classList.remove(...activeClasses);
+        signupTabBtn.classList.add(...inactiveClasses);
+    }
+    showAuthMessage("");
+}
+
+document.addEventListener("keydown", (e) => {
+    const authModalEl = document.getElementById("authModal");
+    if (e.key === "Escape" && authModalEl && !authModalEl.classList.contains("hidden")) {
+        closeAuthModal();
+    }
+});
+
 </script>
     <!-- AUTH MODAL -->
 <div id="authModal"
-     class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4">
+     class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+     onclick="if(event.target===this) closeAuthModal()">
 
     <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-md shadow-2xl relative">
 
@@ -321,43 +354,85 @@ checkLogin();
             ×
         </button>
 
-        <h2 id="authTitle"
-            class="text-2xl font-bold mb-2">
-            Login to EasyWeb
-        </h2>
+        <h2 class="text-2xl font-bold mb-6 text-center">EasyWeb Account</h2>
 
-        <p class="text-slate-500 mb-6">
-            Login to manage your EasyWeb account.
-        </p>
+        <!-- Tabs -->
+        <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-6">
+            <button
+                type="button"
+                id="authTabLoginBtn"
+                onclick="switchAuthTab('login')"
+                class="flex-1 py-2 rounded-lg text-sm font-semibold transition bg-brand-600 text-white">
+                Sign In
+            </button>
+            <button
+                type="button"
+                id="authTabSignupBtn"
+                onclick="switchAuthTab('signup')"
+                class="flex-1 py-2 rounded-lg text-sm font-semibold transition text-slate-600 dark:text-slate-300">
+                Sign Up
+            </button>
+        </div>
 
-        <input
-            id="authEmail"
-            type="email"
-            placeholder="Email Address"
-            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+        <!-- Sign In form -->
+        <form id="loginForm" onsubmit="event.preventDefault(); loginUser();">
+            <label for="loginEmail" class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Email Address</label>
+            <input
+                id="loginEmail"
+                name="loginEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                class="block w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                required>
 
-        <input
-            id="authPassword"
-            type="password"
-            placeholder="Password"
-            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+            <label for="loginPassword" class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Password</label>
+            <input
+                id="loginPassword"
+                name="loginPassword"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Your password"
+                class="block w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                required>
 
-        <button
-            id="authMainButton"
-            onclick="loginUser()"
-            class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold">
-            Login
-        </button>
+            <button
+                type="submit"
+                class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold hover:bg-brand-700 transition">
+                Login
+            </button>
+        </form>
 
-        <p id="authMessage"
-           class="text-sm text-center mt-4"></p>
+        <!-- Sign Up form -->
+        <form id="signupForm" class="hidden" onsubmit="event.preventDefault(); signupUser();">
+            <label for="signupEmail" class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Email Address</label>
+            <input
+                id="signupEmail"
+                name="signupEmail"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                class="block w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                required>
 
-        <button
-            onclick="toggleAuthMode()"
-            id="authToggle"
-            class="w-full mt-4 text-brand-600">
-            Don't have an account? Sign Up
-        </button>
+            <label for="signupPassword" class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Password</label>
+            <input
+                id="signupPassword"
+                name="signupPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="At least 6 characters"
+                class="block w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                required>
+
+            <button
+                type="submit"
+                class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold hover:bg-brand-700 transition">
+                Create Account
+            </button>
+        </form>
+
+        <p id="authMessage" class="text-sm text-center mt-4"></p>
             </div>
         </div>
         <div id="mobile-menu" class="hidden md:hidden glass mt-2 mx-4 p-4 rounded-2xl shadow-xl absolute w-[calc(100%-2rem)]">
