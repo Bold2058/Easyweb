@@ -120,6 +120,244 @@
                 <button class="md:hidden p-2" id="mobile-menu-btn">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
+                 <!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://caosvhoothcokxgtueaj.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BS6vei5Kumj4cLAR2oOfDA_9M8q5DpK";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
+);
+</script>
+    <div id="authBox">
+
+    <h2>EasyWeb Account</h2>
+
+    <input
+        type="email"
+        id="authEmail"
+        placeholder="Email Address"
+        autocomplete="email"
+    >
+
+    <input
+        type="password"
+        id="authPassword"
+        placeholder="Password"
+        autocomplete="current-password"
+    >
+
+    <button onclick="signupUser()">
+        Create Account
+    </button>
+
+    <button onclick="loginUser()">
+        Login
+    </button>
+
+    <button onclick="logoutUser()" id="logoutButton" style="display:none;">
+        Logout
+    </button>
+
+    <p id="authMessage"></p>
+
+</div>
+    <script>
+
+async function signupUser() {
+
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+        showAuthMessage("Please enter email and password.");
+        return;
+    }
+
+    if (password.length < 6) {
+        showAuthMessage("Password must be at least 6 characters.");
+        return;
+    }
+
+    const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            emailRedirectTo: "https://buildeasyweb.online/"
+        }
+    });
+
+    if (error) {
+        showAuthMessage(error.message);
+        return;
+    }
+
+    if (data.session) {
+        showAuthMessage("Account created and logged in!");
+        updateAuthUI(data.user);
+    } else {
+        showAuthMessage(
+            "Account created! Please check your email to verify your account."
+        );
+    }
+}
+
+
+async function loginUser() {
+
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+        showAuthMessage("Please enter email and password.");
+        return;
+    }
+
+    const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+    if (error) {
+        showAuthMessage(error.message);
+        return;
+    }
+
+    showAuthMessage("Login successful!");
+
+    updateAuthUI(data.user);
+}
+
+
+async function logoutUser() {
+
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+        showAuthMessage(error.message);
+        return;
+    }
+
+    showAuthMessage("You have been logged out.");
+
+    updateAuthUI(null);
+}
+
+
+function showAuthMessage(message) {
+
+    document.getElementById("authMessage").textContent = message;
+}
+
+
+function updateAuthUI(user) {
+
+    const logoutButton =
+        document.getElementById("logoutButton");
+
+    if (user) {
+
+        logoutButton.style.display = "block";
+
+        showAuthMessage(
+            "Logged in as: " + user.email
+        );
+
+    } else {
+
+        logoutButton.style.display = "none";
+
+    }
+}
+
+
+/* Check existing login when website opens */
+
+async function checkLogin() {
+
+    const {
+        data: { user }
+    } = await supabaseClient.auth.getUser();
+
+    updateAuthUI(user);
+}
+
+
+/* Detect login/logout changes */
+
+supabaseClient.auth.onAuthStateChange(
+    (event, session) => {
+
+        updateAuthUI(session?.user ?? null);
+
+    }
+);
+
+
+checkLogin();
+
+</script>
+    <!-- AUTH MODAL -->
+<div id="authModal"
+     class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4">
+
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-md shadow-2xl relative">
+
+        <button
+            onclick="closeAuthModal()"
+            class="absolute top-4 right-5 text-2xl text-slate-500">
+            ×
+        </button>
+
+        <h2 id="authTitle"
+            class="text-2xl font-bold mb-2">
+            Login to EasyWeb
+        </h2>
+
+        <p class="text-slate-500 mb-6">
+            Login to manage your EasyWeb account.
+        </p>
+
+        <input
+            id="authEmail"
+            type="email"
+            placeholder="Email Address"
+            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+
+        <input
+            id="authPassword"
+            type="password"
+            placeholder="Password"
+            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
+
+        <button
+            id="authMainButton"
+            onclick="loginUser()"
+            class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold">
+            Login
+        </button>
+
+        <p id="authMessage"
+           class="text-sm text-center mt-4"></p>
+
+        <button
+            onclick="toggleAuthMode()"
+            id="authToggle"
+            class="w-full mt-4 text-brand-600">
+            Don't have an account? Sign Up
+        </button>
             </div>
         </div>
         <div id="mobile-menu" class="hidden md:hidden glass mt-2 mx-4 p-4 rounded-2xl shadow-xl absolute w-[calc(100%-2rem)]">
@@ -1111,245 +1349,6 @@
 
         updateSteps();
     </script>
-     <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = "https://caosvhoothcokxgtueaj.supabase.co";
-
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BS6vei5Kumj4cLAR2oOfDA_9M8q5DpK";
-
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY,
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-        }
-    }
-);
-</script>
-    <div id="authBox">
-
-    <h2>EasyWeb Account</h2>
-
-    <input
-        type="email"
-        id="authEmail"
-        placeholder="Email Address"
-        autocomplete="email"
-    >
-
-    <input
-        type="password"
-        id="authPassword"
-        placeholder="Password"
-        autocomplete="current-password"
-    >
-
-    <button onclick="signupUser()">
-        Create Account
-    </button>
-
-    <button onclick="loginUser()">
-        Login
-    </button>
-
-    <button onclick="logoutUser()" id="logoutButton" style="display:none;">
-        Logout
-    </button>
-
-    <p id="authMessage"></p>
-
-</div>
-    <script>
-
-async function signupUser() {
-
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-
-    if (!email || !password) {
-        showAuthMessage("Please enter email and password.");
-        return;
-    }
-
-    if (password.length < 6) {
-        showAuthMessage("Password must be at least 6 characters.");
-        return;
-    }
-
-    const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-            emailRedirectTo: "https://buildeasyweb.online/"
-        }
-    });
-
-    if (error) {
-        showAuthMessage(error.message);
-        return;
-    }
-
-    if (data.session) {
-        showAuthMessage("Account created and logged in!");
-        updateAuthUI(data.user);
-    } else {
-        showAuthMessage(
-            "Account created! Please check your email to verify your account."
-        );
-    }
-}
-
-
-async function loginUser() {
-
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-
-    if (!email || !password) {
-        showAuthMessage("Please enter email and password.");
-        return;
-    }
-
-    const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
-
-    if (error) {
-        showAuthMessage(error.message);
-        return;
-    }
-
-    showAuthMessage("Login successful!");
-
-    updateAuthUI(data.user);
-}
-
-
-async function logoutUser() {
-
-    const { error } = await supabaseClient.auth.signOut();
-
-    if (error) {
-        showAuthMessage(error.message);
-        return;
-    }
-
-    showAuthMessage("You have been logged out.");
-
-    updateAuthUI(null);
-}
-
-
-function showAuthMessage(message) {
-
-    document.getElementById("authMessage").textContent = message;
-}
-
-
-function updateAuthUI(user) {
-
-    const logoutButton =
-        document.getElementById("logoutButton");
-
-    if (user) {
-
-        logoutButton.style.display = "block";
-
-        showAuthMessage(
-            "Logged in as: " + user.email
-        );
-
-    } else {
-
-        logoutButton.style.display = "none";
-
-    }
-}
-
-
-/* Check existing login when website opens */
-
-async function checkLogin() {
-
-    const {
-        data: { user }
-    } = await supabaseClient.auth.getUser();
-
-    updateAuthUI(user);
-}
-
-
-/* Detect login/logout changes */
-
-supabaseClient.auth.onAuthStateChange(
-    (event, session) => {
-
-        updateAuthUI(session?.user ?? null);
-
-    }
-);
-
-
-checkLogin();
-
-</script>
-    <!-- AUTH MODAL -->
-<div id="authModal"
-     class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4">
-
-    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 w-full max-w-md shadow-2xl relative">
-
-        <button
-            onclick="closeAuthModal()"
-            class="absolute top-4 right-5 text-2xl text-slate-500">
-            ×
-        </button>
-
-        <h2 id="authTitle"
-            class="text-2xl font-bold mb-2">
-            Login to EasyWeb
-        </h2>
-
-        <p class="text-slate-500 mb-6">
-            Login to manage your EasyWeb account.
-        </p>
-
-        <input
-            id="authEmail"
-            type="email"
-            placeholder="Email Address"
-            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
-
-        <input
-            id="authPassword"
-            type="password"
-            placeholder="Password"
-            class="w-full p-3 mb-4 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800">
-
-        <button
-            id="authMainButton"
-            onclick="loginUser()"
-            class="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold">
-            Login
-        </button>
-
-        <p id="authMessage"
-           class="text-sm text-center mt-4"></p>
-
-        <button
-            onclick="toggleAuthMode()"
-            id="authToggle"
-            class="w-full mt-4 text-brand-600">
-            Don't have an account? Sign Up
-        </button>
-
     </div>
 </div>
 </body>
